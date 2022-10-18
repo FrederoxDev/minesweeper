@@ -1,0 +1,18 @@
+* {
+    margin: 0;
+    overflow: hidden;
+}
+
+#settings {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+}
+
+#settings input {
+    width: 80%;
+}
+
+.vertical-divide {
+    margin-top: 10px;
+}
