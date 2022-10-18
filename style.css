@@ -9,7 +9,7 @@
     top: 10px;
 }
 
-#settings input {
+#settings input, button {
     width: 80%;
 }
 

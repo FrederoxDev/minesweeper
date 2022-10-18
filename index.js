@@ -6,6 +6,7 @@ const ctx = canvas.getContext("2d");
 
 const totalBombsInput = document.getElementById("total-bombs")
 const widthInput = document.getElementById("width")
+const newGame = document.getElementById("new-game")
 
 canvas.width = window.innerHeight
 canvas.height = window.innerHeight
@@ -25,17 +26,10 @@ var board = []
 var neighborCounts = []
 
 var isGamePlaying = false;
+var isGameOver = false;
 
-var offsets = [
-    -1 + -width,
-    0 + -width,
-    1 + -width,
-    -1 + 0,
-    1 + 0,
-    -1 + width,
-    0 + width,
-    1 + width,
-]
+var highlightedTile = 0
+var highlightedTileIndexes = []
 
 function CreateBlankBoard() {
     for (var i = 0; i < width * width; i++) {
@@ -103,8 +97,14 @@ function DrawBoard() {
         ctx.beginPath();
         ctx.rect(x * tileWidth, y * tileWidth, tileWidth, tileWidth);
      
-        if (!board[i].isRevealed && !board[i].isFlagged) ctx.fillStyle = "#625e61";
-        else ctx.fillStyle = "#dcd7db";
+        if (!board[i].isRevealed && !board[i].isFlagged) {
+            if (highlightedTileIndexes.includes(i)) ctx.fillStyle = "#585558";
+            else ctx.fillStyle = "#625e61";
+        }
+        else {
+            if (highlightedTileIndexes.includes(i)) ctx.fillStyle = "#d0cccf";
+            else ctx.fillStyle = "#dcd7db";
+        }
     
         ctx.fill();
         ctx.stroke();
@@ -154,6 +154,8 @@ canvas.addEventListener("mousedown", (e) => {
     var y = Math.floor(e.clientY / tileWidth)
     var i = y * width + x
 
+    if (isGameOver) return;
+
     // Left Click
     if (e.button == 0) {
         if (!isGamePlaying) {
@@ -167,7 +169,7 @@ canvas.addEventListener("mousedown", (e) => {
         if (neighborCounts[i] == 0) FloodFill(i);
         
         if (board[i].isBomb) {
-            isGamePlaying = false;
+            isGameOver = true;
         }
 
         DrawBoard()
@@ -178,27 +180,48 @@ canvas.addEventListener("mousedown", (e) => {
         if (!isGamePlaying) return;
         if (board[i].isRevealed) return;
         board[i].isFlagged = !board[i].isFlagged;
+
         DrawBoard()
     }
 })
 
-canvas.addEventListener("contextmenu", (e) => {
-    e.preventDefault()
+canvas.addEventListener("mousemove", (e) => {
+    var localX = Math.floor(e.clientX / tileWidth)
+    var localY = Math.floor(e.clientY / tileWidth)
+    var i = localY * width + localX
+    
+    if (highlightedTile != i) {
+        highlightedTile = y * width + x
+
+        highlightedTileIndexes = []
+        
+        for (var x = -1; x <= 1; x++) {
+            for (var y = -1; y <= 1; y++) {
+                if (x + localX < 0 || x + localX == width) continue;
+                if (y + localY < 0 || y + localY == width) continue;
+
+                highlightedTileIndexes.push(i + x + y * width)
+            }
+        }
+
+        DrawBoard()
+    }
+    else highlightedTile = y * width + x
 })
 
-totalBombsInput.addEventListener("change", (e) => {
+newGame.addEventListener("click", (e) => {
     totalBombs = totalBombsInput.value ?? 10;
-    CreateBlankBoard()
-    DrawBoard()
-    isGamePlaying = false;
-})
-
-widthInput.addEventListener("change", (e) => {
     width = widthInput.value ?? 8;
     tileWidth = canvas.width / width;
+
+    isGameOver = false;
+    isGamePlaying = false;
     CreateBlankBoard()
     DrawBoard()
-    isGamePlaying = false;
+})
+
+canvas.addEventListener("contextmenu", (e) => {
+    e.preventDefault()
 })
 
 totalBombsInput.value = 10;
